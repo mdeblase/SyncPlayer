@@ -58,6 +58,7 @@ public class VideoControlPanel extends JPanel {
         buttonPanel.add(stopButton);
         buttonPanel.add(pauseButton);
         buttonPanel.add(playButton);
+        buttonPanel.add(timeLabel);
 
         add(buttonPanel, BorderLayout.SOUTH);
 

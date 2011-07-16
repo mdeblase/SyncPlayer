@@ -1,0 +1,9 @@
+SyncPlayer
+
+The Goal is to build a media player that will allow video and audio to play at the same time.  The user will be able to sync the playback of the two files by a specific time interval.
+
+I am leveraging the vlcj framework for the video portion of the player. This framework contains java bindings to a use the libraries of a native vlc player installation.  I am building on a Mac so the version of of VLC I have installed is 1.1.10.x 
+
+You will also need the following jars added to your build vlcj-1.2.0.jar, jna.jar and platform.jar. These can be grabbed here: http://www.capricasoftware.co.uk/vlcj/downloads.php
+
+Though vlcj can open and run multiple players, it could be unstable. I might use JMF to handle audio tracks separately, though I haven't started this yet
