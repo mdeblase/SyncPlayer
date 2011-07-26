@@ -6,4 +6,5 @@ I am leveraging the vlcj framework for the video portion of the player. This fra
 
 You will also need the following jars added to your build vlcj-1.2.0.jar, jna.jar and platform.jar. These can be grabbed here: http://www.capricasoftware.co.uk/vlcj/downloads.php
 
-Though vlcj can open and run multiple players, it could be unstable. I might use JMF to handle audio tracks separately, though I haven't started this yet
+Swing components and layouts will be crude for awhile, I want to get the base functionality working first.
+

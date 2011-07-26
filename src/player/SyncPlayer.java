@@ -3,16 +3,25 @@ package player;
 import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.BoxLayout;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import javax.swing.SwingUtilities;
 
-import ui.VideoControlPanel;
+import ui.MediaControlPanel;
+import uk.co.caprica.vlcj.player.MediaPlayer;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.embedded.DefaultFullScreenStrategy;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
@@ -20,76 +29,164 @@ import uk.co.caprica.vlcj.player.embedded.FullScreenStrategy;
 
 import com.sun.jna.NativeLibrary;
 
-public class SyncPlayer {
+public class SyncPlayer implements ActionListener {
     private JFrame frame;
     private Canvas videoSurface;
-    private JPanel videoControlsPanel;
-    
+    private MediaControlPanel videoControlsPanel;
+    private MediaControlPanel audioControlsPanel;
+    private JPanel controlsPanel;
+
     private MediaPlayerFactory mediaPlayerFactory;
-    private EmbeddedMediaPlayer mediaPlayer;
+    private EmbeddedMediaPlayer videoPlayer;
+    private MediaPlayer audioPlayer;
+
+    private JMenuItem openMovieMenuItem = new JMenuItem("Open Movie File...");
+    private JMenuItem openAudioMenuItem = new JMenuItem("Open Audio File...");
+    private JMenuItem exitMenuItem = new JMenuItem("Exit");
+    
+    private JFileChooser chooser = new JFileChooser();
 
     public static void main(final String[] args) throws Exception {
-        NativeLibrary.addSearchPath("vlc", "/Applications/VLC.app/Contents/MacOS/lib");
+        NativeLibrary.addSearchPath("vlc",
+                "/Applications/VLC.app/Contents/MacOS/lib");
         SwingUtilities.invokeLater(new Runnable() {
-          @Override
-          public void run() {
-            new SyncPlayer(args).start(""); //For now add the path to the movie file here, until menus and selection work.
-          }
+            @Override
+            public void run() {
+                new SyncPlayer(); 
+            }
         });
-      }
+    }
 
-    public SyncPlayer(String[] args) {
+    public SyncPlayer() {
         videoSurface = new Canvas();
         videoSurface.setBackground(Color.BLACK);
         videoSurface.setSize(800, 600);
-        
+
         List<String> vlcArgs = new ArrayList<String>();
         vlcArgs.add("--no-plugins-cache");
         vlcArgs.add("--no-video-title-show");
         vlcArgs.add("--no-snapshot-preview");
         vlcArgs.add("--quiet");
         vlcArgs.add("--quiet-synchro");
-        vlcArgs.add("--vout=macosx");//don't need this guy for windows
-        
+        vlcArgs.add("--vout=macosx");// don't need this guy for windows
+
         frame = new JFrame("SyncPlayer");
-        FullScreenStrategy fullScreenStrategy = new DefaultFullScreenStrategy(frame);
-        
+        FullScreenStrategy fullScreenStrategy = new DefaultFullScreenStrategy(
+                frame);
+
         mediaPlayerFactory = new MediaPlayerFactory(vlcArgs.toArray(new String[vlcArgs.size()]));
         mediaPlayerFactory.setUserAgent("vlcj test player");
-        mediaPlayer = mediaPlayerFactory.newEmbeddedMediaPlayer(fullScreenStrategy);
-        mediaPlayer.setVideoSurface(mediaPlayerFactory.newVideoSurface(videoSurface));
-        mediaPlayer.setPlaySubItems(true);
-        mediaPlayer.setEnableKeyInputHandling(false);
-        mediaPlayer.setEnableMouseInputHandling(false);
-        
-        videoControlsPanel = new VideoControlPanel(mediaPlayer);
+        videoPlayer = mediaPlayerFactory.newEmbeddedMediaPlayer(fullScreenStrategy);
+        videoPlayer.setVideoSurface(mediaPlayerFactory.newVideoSurface(videoSurface));
+        videoPlayer.setPlaySubItems(true);
+        videoPlayer.setEnableKeyInputHandling(false);
+        videoPlayer.setEnableMouseInputHandling(false);
+
+        audioPlayer = mediaPlayerFactory.newHeadlessMediaPlayer();
+
+        controlsPanel = new JPanel();
+        controlsPanel.setLayout(new BoxLayout(controlsPanel,
+                BoxLayout.PAGE_AXIS));
+        videoControlsPanel = new MediaControlPanel(videoPlayer);
+        audioControlsPanel = new MediaControlPanel(audioPlayer);
+        controlsPanel.add(videoControlsPanel);
+        controlsPanel.add(audioControlsPanel);
+
         frame.setLayout(new BorderLayout());
         frame.setBackground(Color.GRAY);
         frame.add(videoSurface, BorderLayout.CENTER);
-        frame.add(videoControlsPanel, BorderLayout.SOUTH);
-        //frame.setJMenuBar(buildMenuBar());
+        frame.add(controlsPanel, BorderLayout.SOUTH);
+        frame.setJMenuBar(createMenuBar());
         frame.pack();
         frame.addWindowListener(new WindowAdapter() {
-          public void windowClosing(WindowEvent evt) {
-            if(mediaPlayer != null) {
-              mediaPlayer.release();
-              mediaPlayer = null;
+            public void windowClosing(WindowEvent evt) {
+                if (videoPlayer != null) {
+                    videoPlayer.release();
+                    videoPlayer = null;
+                }
+                
+                if (audioPlayer != null) {
+                    audioPlayer.release();
+                    audioPlayer = null;
+                }
+
+                if (mediaPlayerFactory != null) {
+                    mediaPlayerFactory.release();
+                    mediaPlayerFactory = null;
+                }
+                System.exit(0);
+            }
+        });
+
+        frame.setVisible(true);
+
+        // add listeners to mediaPlayer
+    }// end SyncPlayer
+
+    public JMenuBar createMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+
+        JMenu mediaMenu = new JMenu("File");
+        mediaMenu.setMnemonic('f');
+
+        openMovieMenuItem.setMnemonic('m');
+        openMovieMenuItem.addActionListener(this);
+        mediaMenu.add(openMovieMenuItem);
+
+        openAudioMenuItem.setMnemonic('a');
+        openAudioMenuItem.addActionListener(this);
+        mediaMenu.add(openAudioMenuItem);
+
+        mediaMenu.add(new JSeparator());
+
+        exitMenuItem.setMnemonic('x');
+        exitMenuItem.addActionListener(this);
+        mediaMenu.add(exitMenuItem);
+
+        menuBar.add(mediaMenu);
+
+        return menuBar;
+    }
+
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == openMovieMenuItem) {
+            int result = chooser.showOpenDialog(frame);
+
+            // if image file accepted, set it as icon of the label
+            if (result == JFileChooser.APPROVE_OPTION) {
+                String path = chooser.getSelectedFile().getPath();
+                videoControlsPanel.setMediaName(chooser.getSelectedFile().getName());
+                videoPlayer.playMedia(path);
             }
 
-            if(mediaPlayerFactory != null) {
-              mediaPlayerFactory.release();
-              mediaPlayerFactory = null;
+        } else if (e.getSource() == openAudioMenuItem) {
+            int result = chooser.showOpenDialog(frame);
+
+            // if image file accepted, set it as icon of the label
+            if (result == JFileChooser.APPROVE_OPTION) {
+                String path = chooser.getSelectedFile().getPath();
+                audioControlsPanel.setMediaName(chooser.getSelectedFile().getName());
+                audioPlayer.playMedia(path);
+            }
+        } else if (e.getSource() == exitMenuItem) {
+            if (videoPlayer != null) {
+                videoPlayer.release();
+                videoPlayer = null;
+            }
+            
+            if (audioPlayer != null) {
+                audioPlayer.release();
+                audioPlayer = null;
+            }
+
+            if (mediaPlayerFactory != null) {
+                mediaPlayerFactory.release();
+                mediaPlayerFactory = null;
             }
             System.exit(0);
-          }
-        });
-        
-        frame.setVisible(true);
-        
-        //add listeners to mediaPlayer  
-    }//end SyncPlayer
-    
-    private void start(String file) {
-        mediaPlayer.playMedia(file);
-      }
+        }
+
+    }
 }
