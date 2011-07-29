@@ -21,6 +21,8 @@ import javax.swing.JSeparator;
 import javax.swing.SwingUtilities;
 
 import ui.MediaControlPanel;
+import ui.SyncDialog;
+import uk.co.caprica.vlcj.filter.swing.SwingFileFilterFactory;
 import uk.co.caprica.vlcj.player.MediaPlayer;
 import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.embedded.DefaultFullScreenStrategy;
@@ -29,20 +31,20 @@ import uk.co.caprica.vlcj.player.embedded.FullScreenStrategy;
 
 import com.sun.jna.NativeLibrary;
 
-public class SyncPlayer implements ActionListener {
+public class SyncPlayer implements ActionListener{
     private JFrame frame;
     private Canvas videoSurface;
     private MediaControlPanel videoControlsPanel;
     private MediaControlPanel audioControlsPanel;
     private JPanel controlsPanel;
-
     private MediaPlayerFactory mediaPlayerFactory;
     private EmbeddedMediaPlayer videoPlayer;
     private MediaPlayer audioPlayer;
-
     private JMenuItem openMovieMenuItem = new JMenuItem("Open Movie File...");
     private JMenuItem openAudioMenuItem = new JMenuItem("Open Audio File...");
+    private JMenuItem openDiscMenuItem = new JMenuItem("Open Disc...");
     private JMenuItem exitMenuItem = new JMenuItem("Exit");
+    private JMenuItem syncMenuItem = new JMenuItem("Sync To Time Interval...");
     
     private JFileChooser chooser = new JFileChooser();
 
@@ -91,7 +93,7 @@ public class SyncPlayer implements ActionListener {
         audioControlsPanel = new MediaControlPanel(audioPlayer);
         controlsPanel.add(videoControlsPanel);
         controlsPanel.add(audioControlsPanel);
-
+        
         frame.setLayout(new BorderLayout());
         frame.setBackground(Color.GRAY);
         frame.add(videoSurface, BorderLayout.CENTER);
@@ -117,10 +119,38 @@ public class SyncPlayer implements ActionListener {
                 System.exit(0);
             }
         });
-
+        //Get global key events Not working so far, might need vlc 1.2 native libraries
+        //this might cause other issues with OSX
+        
+        /*
+        Toolkit.getDefaultToolkit().addAWTEventListener(new AWTEventListener() {
+            @Override
+            public void eventDispatched(AWTEvent event) {
+              if(event instanceof KeyEvent) {
+                KeyEvent e = (KeyEvent)event;
+                if(e.getID() == KeyEvent.KEY_PRESSED) {
+                    int code = e.getKeyCode();
+                    if (code == KeyEvent.VK_UP) {
+                        videoPlayer.menuUp();
+                    } else if (code == KeyEvent.VK_DOWN) {
+                        System.out.println("In there");
+                        videoPlayer.menuDown();
+                    } else if (code == KeyEvent.VK_LEFT) {
+                        videoPlayer.menuLeft();
+                    } else if (code == KeyEvent.VK_RIGHT) {
+                        videoPlayer.menuRight();
+                    } else if (code == KeyEvent.VK_ENTER) {
+                        System.out.println("entered");
+                        videoPlayer.menuActivate();
+                    }
+                }
+              }
+            }
+          }, AWTEvent.KEY_EVENT_MASK);
+         */
+        
+        
         frame.setVisible(true);
-
-        // add listeners to mediaPlayer
     }// end SyncPlayer
 
     public JMenuBar createMenuBar() {
@@ -136,6 +166,10 @@ public class SyncPlayer implements ActionListener {
         openAudioMenuItem.setMnemonic('a');
         openAudioMenuItem.addActionListener(this);
         mediaMenu.add(openAudioMenuItem);
+        
+        openDiscMenuItem.setMnemonic('d');
+        openDiscMenuItem.addActionListener(this);
+        mediaMenu.add(openDiscMenuItem);
 
         mediaMenu.add(new JSeparator());
 
@@ -144,7 +178,15 @@ public class SyncPlayer implements ActionListener {
         mediaMenu.add(exitMenuItem);
 
         menuBar.add(mediaMenu);
-
+        
+        JMenu syncMenu = new JMenu("Sync");
+        syncMenu.setMnemonic('s');
+        
+        syncMenuItem.addActionListener(this);
+        syncMenu.add(syncMenuItem);
+        
+        menuBar.add(syncMenu);
+        
         return menuBar;
     }
 
@@ -152,6 +194,8 @@ public class SyncPlayer implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == openMovieMenuItem) {
+            chooser.setFileFilter(SwingFileFilterFactory.newVideoFileFilter());
+
             int result = chooser.showOpenDialog(frame);
 
             // if image file accepted, set it as icon of the label
@@ -162,6 +206,7 @@ public class SyncPlayer implements ActionListener {
             }
 
         } else if (e.getSource() == openAudioMenuItem) {
+            chooser.setFileFilter(SwingFileFilterFactory.newAudioFileFilter());
             int result = chooser.showOpenDialog(frame);
 
             // if image file accepted, set it as icon of the label
@@ -170,7 +215,13 @@ public class SyncPlayer implements ActionListener {
                 audioControlsPanel.setMediaName(chooser.getSelectedFile().getName());
                 audioPlayer.playMedia(path);
             }
-        } else if (e.getSource() == exitMenuItem) {
+        } else if (e.getSource() ==  openDiscMenuItem) {
+            videoPlayer.playMedia("dvd:////dev/rdisk1");
+            
+        }
+        
+        
+        else if (e.getSource() == exitMenuItem) {
             if (videoPlayer != null) {
                 videoPlayer.release();
                 videoPlayer = null;
@@ -186,7 +237,11 @@ public class SyncPlayer implements ActionListener {
                 mediaPlayerFactory = null;
             }
             System.exit(0);
+        } else if (e.getSource() == syncMenuItem) {
+            SyncDialog sd = new SyncDialog(videoPlayer, audioPlayer);
+            sd.setVisible(true);
         }
 
     }
+
 }
