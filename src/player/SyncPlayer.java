@@ -71,13 +71,18 @@ public class SyncPlayer implements ActionListener{
         vlcArgs.add("--quiet");
         vlcArgs.add("--quiet-synchro");
         vlcArgs.add("--vout=macosx");// don't need this guy for windows
+//        vlcArgs.add("--global-key-nav-activate=10");
+//        vlcArgs.add("--global-key-nav-up=38");
+//        vlcArgs.add("--global-key-nav-down=40");
+//        vlcArgs.add("--global-key-nav-left=37");
+//        vlcArgs.add("--global-key-nav-right=39");
 
         frame = new JFrame("SyncPlayer");
         FullScreenStrategy fullScreenStrategy = new DefaultFullScreenStrategy(
                 frame);
 
         mediaPlayerFactory = new MediaPlayerFactory(vlcArgs.toArray(new String[vlcArgs.size()]));
-        mediaPlayerFactory.setUserAgent("vlcj test player");
+        mediaPlayerFactory.setUserAgent("Sync Player");
         videoPlayer = mediaPlayerFactory.newEmbeddedMediaPlayer(fullScreenStrategy);
         videoPlayer.setVideoSurface(mediaPlayerFactory.newVideoSurface(videoSurface));
         videoPlayer.setPlaySubItems(true);
@@ -130,6 +135,10 @@ public class SyncPlayer implements ActionListener{
                 KeyEvent e = (KeyEvent)event;
                 if(e.getID() == KeyEvent.KEY_PRESSED) {
                     int code = e.getKeyCode();
+                    System.out.println(code);
+                    
+                    //This will only work with VLC 1.2
+        
                     if (code == KeyEvent.VK_UP) {
                         videoPlayer.menuUp();
                     } else if (code == KeyEvent.VK_DOWN) {
@@ -142,7 +151,7 @@ public class SyncPlayer implements ActionListener{
                     } else if (code == KeyEvent.VK_ENTER) {
                         System.out.println("entered");
                         videoPlayer.menuActivate();
-                    }
+                    } 
                 }
               }
             }
