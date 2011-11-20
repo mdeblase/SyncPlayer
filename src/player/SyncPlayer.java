@@ -71,18 +71,18 @@ public class SyncPlayer implements ActionListener{
         vlcArgs.add("--quiet");
         vlcArgs.add("--quiet-synchro");
         vlcArgs.add("--vout=macosx");// don't need this guy for windows
-//        vlcArgs.add("--global-key-nav-activate=10");
-//        vlcArgs.add("--global-key-nav-up=38");
-//        vlcArgs.add("--global-key-nav-down=40");
-//        vlcArgs.add("--global-key-nav-left=37");
-//        vlcArgs.add("--global-key-nav-right=39");
+        vlcArgs.add("--global-key-nav-activate=10");
+        vlcArgs.add("--global-key-nav-up=38");
+        vlcArgs.add("--global-key-nav-down=40");
+        vlcArgs.add("--global-key-nav-left=37");
+        vlcArgs.add("--global-key-nav-right=39");
 
         frame = new JFrame("SyncPlayer");
         FullScreenStrategy fullScreenStrategy = new DefaultFullScreenStrategy(
                 frame);
 
         mediaPlayerFactory = new MediaPlayerFactory(vlcArgs.toArray(new String[vlcArgs.size()]));
-        mediaPlayerFactory.setUserAgent("Sync Player");
+        mediaPlayerFactory.setUserAgent("SyncPlayer");
         videoPlayer = mediaPlayerFactory.newEmbeddedMediaPlayer(fullScreenStrategy);
         videoPlayer.setVideoSurface(mediaPlayerFactory.newVideoSurface(videoSurface));
         videoPlayer.setPlaySubItems(true);
