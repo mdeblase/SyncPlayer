@@ -37,7 +37,7 @@ public class MediaControlPanel extends JPanel {
     public MediaControlPanel(MediaPlayer mediaPlayer) {
         this.mediaPlayer = mediaPlayer;
         init();
-        executorService.scheduleAtFixedRate(new UpdateRunnable(mediaPlayer), 0L, 1L, TimeUnit.SECONDS);
+        executorService.scheduleAtFixedRate(new UpdateRunnable(mediaPlayer), 0L, 1L, TimeUnit.MILLISECONDS);
     }
 
     private void init() {

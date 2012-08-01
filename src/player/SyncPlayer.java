@@ -1,10 +1,14 @@
 package player;
 
+import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Color;
+import java.awt.Toolkit;
+import java.awt.event.AWTEventListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
@@ -127,7 +131,7 @@ public class SyncPlayer implements ActionListener{
         //Get global key events Not working so far, might need vlc 1.2 native libraries
         //this might cause other issues with OSX
         
-        /*
+        
         Toolkit.getDefaultToolkit().addAWTEventListener(new AWTEventListener() {
             @Override
             public void eventDispatched(AWTEvent event) {
@@ -156,7 +160,7 @@ public class SyncPlayer implements ActionListener{
               }
             }
           }, AWTEvent.KEY_EVENT_MASK);
-         */
+         
         
         
         frame.setVisible(true);
